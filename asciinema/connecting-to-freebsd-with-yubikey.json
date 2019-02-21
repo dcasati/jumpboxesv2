@@ -1,0 +1,13 @@
+{"version": 2, "width": 119, "height": 34, "timestamp": 1550716013, "env": {"SHELL": "/usr/bin/zsh", "TERM": "xterm-256color"}, "title": "connecting to the jumpbox with a yubikey"}
+[0.542012, "o", "The authenticity of host 'freebsd12sudo.southcentralus.cloudapp.azure.com (40.124.36.9)' can't be established.\r\nECDSA key fingerprint is SHA256:/7ujqbFPR/z5KkfN4uyGyelUBGfofpTp1307nsqPFmo.\r\nAre you sure you want to continue connecting (yes/no)? "]
+[1.936114, "o", "y"]
+[2.236005, "o", "e"]
+[2.47607, "o", "s"]
+[3.961185, "o", "\r\n"]
+[3.961441, "o", "Warning: Permanently added 'freebsd12sudo.southcentralus.cloudapp.azure.com,40.124.36.9' (ECDSA) to the list of known hosts.\r\r\n"]
+[4.997018, "o", "YubiKey for `azureuser': "]
+[14.824, "o", "\r\n"]
+[16.156842, "o", "FreeBSD 12.0-RELEASE r341666 GENERIC \r\n\r\nWelcome to FreeBSD!\r\n\r\nRelease Notes, Errata: https://www.FreeBSD.org/releases/\r\nSecurity Advisories:   https://www.FreeBSD.org/security/\r\nFreeBSD Handbook:      https://www.FreeBSD.org/handbook/\r\nFreeBSD FAQ:           https://www.FreeBSD.org/faq/\r\nQuestions List: https://lists.FreeBSD.org/mailman/listinfo/freebsd-questions/\r\nFreeBSD Forums:        https://forums.FreeBSD.org/\r\n\r\nDocuments installed with the system are in the /usr/local/share/doc/freebsd/\r\ndirectory, or can be installed later with:  pkg install en-freebsd-doc\r\nFor other languages, replace \"en\" with a language code like de or fr.\r\n\r\nShow the version of FreeBSD installed:  freebsd-version ; uname -a\r\nPlease include that output and any error messages when posting questions.\r\nIntroduction to manual pages:  man man\r\nFreeBSD directory layout:      man hier\r\n\r\nEdit /etc/motd to change this login announcement.\r\n"]
+[16.756035, "o", "Handy bash(1) prompt:  PS1=\"\\u@\\h \\w \\!$ \"\r\n\t\t-- David Scheidt <dscheidt@tumbolia.com>\r\n$ "]
+[19.922476, "o", "^D"]
+[19.922803, "o", "Connection to freebsd12sudo.southcentralus.cloudapp.azure.com closed.\r\r\n"]

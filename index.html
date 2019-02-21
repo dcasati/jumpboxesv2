@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="keywords" content="terraform, devops, jumpbox, hashidays" />
+    <meta name="description" content="Jumpboxes at Easy: How Terraform and Packer Enable the Easy Creation of Secure Jumpboxes." />
+    <title>Jumpboxes at Easy: How Terraform and Packer Enable the Easy Creation of Secure Jumpboxes.</title>
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif);
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+        font-family: 'Droid Serif';
+      }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: 400;
+        margin-bottom: 0;
+      }
+      .remark-slide-content h1 { font-size: 3em; }
+      .remark-slide-content h2 { font-size: 2em; }
+      .remark-slide-content h3 { font-size: 1.6em; }
+      .footnote {
+        position: absolute;
+        bottom: 3em;
+      }
+      li p { line-height: 1.25em; }
+      .red { color: #fa0000; }
+      .white {color: #e7e8e2;}
+      .large { font-size: 2em; }
+      a, a > code {
+        color: rgb(249, 38, 114);
+        text-decoration: none;
+      }
+      code {
+        background: #e7e8e2;
+        border-radius: 5px;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code-line-highlighted     { background-color: #373832; }
+      .pull-left {
+        float: left;
+        width: 47%;
+      }
+      .pull-right {
+        float: right;
+        width: 47%;
+      }
+      .pull-right ~ p {
+        clear: both;
+      }
+      #slideshow .slide .content code {
+        font-size: 0.8em;
+      }
+      #slideshow .slide .content pre code {
+        font-size: 0.9em;
+        padding: 15px;
+      }
+      .inverse {
+        background: #272822;
+        color: #777872;
+        text-shadow: 0 0 20px #333;
+      }
+      .inverse h1, .inverse h2 {
+        color: #f3f3f3;
+        line-height: 0.8em;
+      }
+
+      /* Slide-specific styling */
+      #slide-inverse .footnote {
+        bottom: 12px;
+        left: 20px;
+      }
+      #slide-how .slides {
+        font-size: 0.9em;
+        position: absolute;
+        top:  151px;
+        right: 140px;
+      }
+      #slide-how .slides h3 {
+        margin-top: 0.2em;
+      }
+      #slide-how .slides .first, #slide-how .slides .second {
+        padding: 1px 20px;
+        height: 90px;
+        width: 120px;
+        -moz-box-shadow: 0 0 10px #777;
+        -webkit-box-shadow: 0 0 10px #777;
+        box-shadow: 0 0 10px #777;
+      }
+      #slide-how .slides .first {
+        background: #fff;
+        position: absolute;
+        top: 20%;
+        left: 20%;
+        z-index: 1;
+      }
+      #slide-how .slides .second {
+        position: relative;
+        background: #fff;
+        z-index: 0;
+      }
+
+      /* Two-column layout */
+      .left-column {
+        color: #777;
+        width: 20%;
+        height: 92%;
+        float: left;
+      }
+        .left-column h2:last-of-type, .left-column h3:last-child {
+          color: #000;
+        }
+      .right-column {
+        width: 75%;
+        float: right;
+        padding-top: 1em;
+      }
+    </style>
+     <link rel="stylesheet" type="text/css" href="css/asciinema-player.css" />
+  </head>
+  <body>
+    <textarea id="source">
+name: inverse
+layout: true
+class: center, middle, inverse
+---
+# Jumpboxes at Easy: 
+## How Terraform and Packer Enable the Easy Creation of Secure Jumpboxes
+
+[Diego Casati - Microsoft]
+---
+layout: false
+.left-column[
+  ## First things first
+]
+.right-column[
+
+Requirements for this workshop:
+
+- an Azure Subscription
+
+tools: 
+
+- `git`, 
+- an editor (vs `code`, `vi`, `emacs`, `nano`), 
+- `az` - azure cli.
+- `ssh`
+ 
+or the cloud shell at [https://shell.azure.com](https://shell.azure.com)
+
+Before we proceed, please do this now:
+
+1. Clone this repo:
+  ```bash
+  git clone https://github.com/dcasati/jumpboxes.git
+  ```
+1. If you are using VS Code, install the Terraform extension:
+
+![vs-terraform](images/vs-terraform.png)
+  
+]
+---
+template:inverse
+
+## What is a Jumpbox anyway - a.k.a: Why should I care ?
+---
+layout: false
+.left-column[
+  ## What is it?
+]
+.right-column[
+
+In a nutshell - 
+
+> "A jump server, jump host or jumpbox is a computer on a network used to access and manage devices
+> in a separate security zone. The most common example is **managing a host in a DMZ from trusted 
+> networks or computers**."
+>
+> -- <cite>https://en.wikipedia.org/wiki/Jump_server</cite>
+
+]
+---
+.left-column[
+  ## What is it?
+  ## Why use it?
+]
+.right-column[
+
+## Reasons for using a jumpbox:
+
+- **Access control** of who can touch the infrastructure
+
+- **Security controls** on what software is installed - less is more
+
+- **Audit** and logging of all activities. Single point of entry into the infrastructure
+
+- **Easy hardening** of the OS and services without changes to the infrastructure
+
+]
+---
+.left-column[
+  ## What is it?
+  ## Why use it?
+  ## How to build it ?
+]
+.right-column[
+## Primarily, two choices:
+
+1. Manual process
+
+1. Using Infrastructure as Code 
+]
+---
+.left-column[
+  ## What is it?
+  ## Why use it?
+  ## How to build it ?
+]
+.right-column[
+## Primarily, two choices:
+
+1. Manual process
+      1. Create a VM, install the OS, patch, generalize the VM, upload to the cloud
+
+1. Using Infrastructure as Code (IaC)
+      1. Essentialy, automate option 1 using modern tools like: Terraform, Packer, ARM
+
+]
+---
+
+.left-column[
+  ## What is it?
+  ## Why use it?
+  ## How to build it ?
+  ## Before proceeding
+]
+.right-column[
+## Considerations
+
+Using Infrastructure as Code brings some important considerations: 
+
+**The good**: 
+
+  - Its clear, concise, reproducible method are a plus. 
+  
+**The bad**: 
+
+  - The drawback to have in mind is this: when not careful, a commit can break your entire infrastructure. 
+  
+**The ugly**: 
+
+  - This could be your production.red[*] and staging environment.
+
+  .footnote[.red[*] Version control and file isolation can mitigate most of these issues.]
+]
+---
+template: inverse
+
+## Terraform and Packer
+---
+name: how
+
+.left-column[
+  ## What is Terraform ?
+]
+.right-column[
+
+![Terraform](images/terraform.png)
+
+Terraform is a tool for **building, changing, and versioning** infrastructure safely and efficiently. Terraform can manage existing and popular 
+service providers as well as custom in-house solutions.
+
+.footnote[More on the [Terraform website](http://www.terraform.io).]
+]
+---
+.left-column[
+  ## What is Terraform ?
+  ## What is Packer?
+]
+
+.right-column[
+
+![Packer](images/packer.png)
+
+Packer is an open source tool for **creating identical machine images** for multiple 
+platforms from a single source configuration. 
+
+
+.footnote[More on the [Packer website](http://www.packer.io).]
+]
+---
+.left-column[
+  ## What is Terraform ?
+  ## What is Packer?
+  ## Terraform vs Packer
+]
+.right-column[
+## Terraform or Packer - When should I use it?
+
+1. **Terraform** on it's own: when you don't need to customize the image being deployed.
+      
+  Trade-offs:
+      - Works well for on point adjustments to the VM. 
+      - Time to build the solution - more time when deploying.
+      - Possibility of snowflakes
+
+1. **Terraform** in tandem with Packer: when you don't to customize the image being deployed at runtime.
+  
+  Trade-offs:
+      - Base image can be use to carbon copy new VMs.
+      - Time to build the solution - shave-off deployment time due to the pre-built image. 
+]
+---
+.left-column[
+  ## What is Terraform ?
+  ## What is Packer?
+  ## Terraform vs Packer
+  ## Setting up access to Azure
+]
+.right-column[
+Terraform uses an Azure AD service principal to provision resources on Azure. 
+
+Here we have two options:
+
+1. Manually setup the service principal as described [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/terraform-install-configure#set-up-terraform-access-to-azure)
+
+1. Use the [setup_terraform.sh](https://github.com/dcasati/jumpboxes/blob/master/tools/setup_terraform.sh) found under the `tools/` directory. 
+]
+---
+.left-column[
+  ## What is Terraform ?
+  ## What is Packer?
+  ## Terraform vs Packer
+  ## Setting up access to Azure
+]
+.right-column[
+
+1. If not done already, log into Azure
+   ```bash
+   $ az login
+   ```
+1. Next, select a SUBSCRIPTION
+   ```bash
+   $ az account list -o table
+   ```
+1. The output should look similar to this
+
+<pre><code>
+  Name                                CloudName    SubscriptionId  State    IsDefault
+  ----------------------------------  -----------  --------------  -------  ---------
+  Microsoft Azure Sponsorship         AzureCloud   XXXXXXXX-XXXX.  Enabled  
+  Visual Studio Enterprise            AzureCloud   XXXXXXXX-XXXX.  Enabled  True
+</code></pre>
+]
+---
+.left-column[
+## What is Terraform ?
+## What is Packer?
+## Terraform vs Packer
+## Setting up access to Azure
+]
+.right-column[
+Execute the `setup_terraform.sh` script:
+
+  ```bash
+  $ cd tools/
+  $ chmod +x setup_terraform.sh
+  $ SUBSCRIPTION=XXXXXXXXXX
+  $ ./setup_terraform.sh -s ${SUBSCRIPTION}
+  ```
+
+  OUTPUT
+  ```bash
+  Setting up the subscription
+  ----------------------------------------------------------
+  $ az account set --subscription=XXXXXXXXXXXXX
+  Retrying role assignment creation: 1/36
+  Setting environment variables for Terraform
+  ----------------------------------------------------------
+  $ source terraform.rc
+  Here are the Terraform environment variables for your setup
+  ----------------------------------------------------------
+  export ARM_SUBSCRIPTION_ID="XXXXXXXXX"
+  export ARM_CLIENT_ID="XXXXXXXXX"
+  export ARM_CLIENT_SECRET="XXXXXXXX"
+  export ARM_TENANT_ID="XXXXXXX"
+  ----------------------------------------------------------
+  Setup is done. Your Terraform variables were saved on the terraform.rc file.
+  ```
+]
+---
+template: inverse
+
+# Example 1 - Custom built jumpbox with Packer
+---
+.left-column[
+  ## The big picture
+]
+.right-column[
+
+![Our architecture](images/diagram.png)
+]
+---
+.left-column[
+  ## The big picture
+]
+.right-column[
+
+## sudo_pair by Square
+
+> `sudo_pair` is a plugin for sudo that requires another human to
+>  approve and monitor privileged sudo sessions.
+
+![sudo_pair](images/demo.gif)
+
+.footnote[More information: https://github.com/square/sudo_pair]
+
+]
+---
+.left-column[
+  ## Building a custom image
+  ### - variables
+]
+.right-column[
+  ```json
+  {
+    "variables": {
+      "client_id": "{{env `ARM_CLIENT_ID`}}",
+      "client_secret": "{{env `ARM_CLIENT_SECRET`}}",
+      "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+      "ssh_user": "packer",
+      "ssh_pass": "{{env `ARM_SSH_PASS`}}"
+    },
+  [...]
+  }
+  ```
+
+  Recap: These values are coming from our terraform.rc file created earlier.
+  ```bash
+  $ source terraform.rc
+  Here are the Terraform environment variables for your setup
+  ----------------------------------------------------------
+  export ARM_SUBSCRIPTION_ID="XXXXXXXXX"
+  export ARM_CLIENT_ID="XXXXXXXXX"
+  export ARM_CLIENT_SECRET="XXXXXXXX"
+  export ARM_TENANT_ID="XXXXXXX"
+  ----------------------------------------------------------
+  ```
+]
+---
+.left-column[
+  ## Building a custom image
+  ### - variables
+  ### - builders
+]
+.right-column[
+
+These values are defined on the `variables.json` file.
+
+  ```json
+  {
+    "builders": [{
+      "type": "azure-arm",
+  
+      "client_id": "{{user `client_id`}}",
+      "client_secret": "{{user `client_secret`}}",
+      "subscription_id": "{{user `subscription_id`}}",
+      "managed_image_resource_group_name": "packertest",
+      "managed_image_name": "FreeBSDjumpbox",
+  
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_pass`}}",
+  
+      "os_type": "Linux",
+      "image_publisher": "MicrosoftOSTC",
+      "image_offer": "FreeBSD",
+      "image_sku": "12.0",
+      "image_version": "latest",
+  
+      "location": "{{user `LOCATION`}}",
+      "vm_size": "Standard_DS2_v2"
+    }],
+  }
+  ```
+]
+---
+.left-column[
+  ## Building a custom image
+  ### - variables
+  ### - builders
+  ### - provisioners
+]
+.right-column[
+
+Here, you can customize the VM. We are using a script called `setup_sudo_pair.sh` for that.
+Also, take a look at the last inline command. 
+
+In here, we are generalizing the VM (deprovisioning).
+
+  ```json
+    [...]
+    "provisioners": [
+     { 
+      "execute_command": "chmod +x {{ .Path }}; sudo -E sh '{{ .Path }}'",
+      "script": "setup_sudo_pair.sh",
+      "type": "shell",
+      "skip_clean": "true"
+     },
+      {
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+      "inline": [
+        "env ASSUME_ALWAYS_YES=YES pkg bootstrap",
+        "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+      ],7 
+      "inline_shebang": "/bin/sh -x",
+      "type": "shell",
+      "skip_clean": "true",
+      "expect_disconnect": "true"
+    }]
+  }
+  ```
+]
+---
+template: inverse
+
+# Let's see that in action
+---
+.left-column[
+  ## Building a custom image
+  ### - variables
+  ### - builders
+  ### - provisioners
+  ## Packer in action
+]
+.right-column[
+  
+<asciinema-player src="asciinema/custom_packer.json" cols="132" rows="30"></asciinema-player>
+]
+---
+template: inverse
+# sudo_pair in action
+
+<asciinema-player src="asciinema/sudo_pair-freebsd.json" cols="300" rows="30"></asciinema-player>
+
+---
+template: inverse
+
+# Example 2 - Adhoc jumpbox with ssh + yubikeys
+---
+.left-column[
+  ## Bootstraping your infra
+]
+.right-column[
+
+![Our architecture](images/diagram.png)
+]
+---
+.left-column[
+## Bootstraping your infra
+### - MFA with Yubikeys
+]
+.right-column[
+![Yubikeys](images/Security-Key-by-Yubico-444x444.png)
+
+.footnote[For more information: [https://www.yubico.com/why-yubico/for-developers/](https://www.yubico.com/why-yubico/for-developers/)]
+]
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+]
+.right-column[
+Reference files are under: `freebsd/` directory
+
+| File         | Comment       |
+|:------------- |:------------- |
+| main.tf      | This is our core file. All of the definitions are here |
+| outputs.tf   | Defines the output from `terraform show` |
+| variables.tf | Defines the variables and default values used on `main.tf` |
+| common.tfvars| User defined values for the variables.red[*] |
+| yubikey.tfvars| User defined values for the the Yubikey.red[*] |
+
+We will also run a few commands after the VM is up and running as defined on the file
+`yubikey_lockdown.sh`.
+
+```bash
+#!/bin/sh
+#-
+# 
+# yubikey_lockdown - Adds the Yubikey as a required authentication method for SSH. 
+#
+# After the setup, to connect via SSH will require the following:
+#
+#   1. SSH public key
+#   2. The Yubikey used for the setup
+#   3. Password
+```
+
+.footnote[.red[*] You will be editing this file.]
+
+]
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+  ### - Default values
+]
+.right-column[
+
+The following table shows our default values:
+
+| Parameter | Default Value |
+| :- | :- |
+| vm_size | Standard A0 |
+| location | East US |
+| Admin user.red[*] | azureuser |
+| VNet | 10.0.0.0/16 |
+| Management Subnet | 10.0.1.0/24 |
+| OS Version | FreeBSD 12.0 (RELEASE)|
+
+
+.footnote[.red[*] Admin user will connect with ssh using public and private key pair]
+]
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+  ### - Default values
+  ### - Yubikey values
+]
+.right-column[
+## Using MFA - Yubikey
+
+Here are the steps needed:
+
+1. Go to https://upgrade.yubico.com/getapikey/ and grab an API key.
+
+  1. Open the `yubikey.tfvars` file and add the following:
+  1. Save the `Client ID` to the `client_id` variable
+  1. Save the `Secret key` to the `secretkey` variable
+  1. Press your Yubikey, and copy the first 12 characters from there. save the output into `token_id` variable.**
+
+Your `yubikey.tfvars` will resemble this configuration:
+
+```bash
+client_id = "12345"
+secretkey = "BUNCHOFLETTERSANDNUMBERS="
+token_id = "ccccXXXXX"
+```
+
+You can also do this on a terminal:
+
+```bash
+$ token_id_base=[press your YUBIKEY now]
+$ echo $token_id_base | cut -c '1-12'
+```
+]
+
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+  ### - Default values
+  ### - Yubikey values
+  ### - Terraform in action
+]
+.right-column[
+
+## Deploying your first Jumpbox VM with Terraform
+
+1. `terraform init`
+1. `terraform plan -var-file common.tfvars -var-file yubikey.tfvars -o deploy-me`
+1. `terraform apply "deploy-me"`
+
+<asciinema-player src="asciinema/terraform-apply-freebsd.json" cols="132" rows="24"></asciinema-player>
+]
+
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+  ### - Default values
+  ### - Yubikey values
+  ### - Terraform in action
+]
+.right-column[
+
+## Connecting to the jumpbox
+
+<asciinema-player src="asciinema/connecting-to-freebsd-with-yubikey.json" cols="132" rows="24"></asciinema-player>
+
+]
+---
+.left-column[
+  ## Bootstraping your infra
+  ### - MFA with Yubikeys
+  ### - Core files
+  ### - Default values
+  ### - Yubikey values
+  ### - Terraform in action
+  ### - Cleaning up
+]
+.right-column[
+## Cleaning up
+
+1. `terraform destroy -var-file=common.tfvars`
+
+Say .red[yes] when you see this prompt:
+
+<pre><code>
+  Do you really want to destroy?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: .red[yes]
+</code></pre>
+
+]
+---
+
+template: inverse
+
+## Next Steps
+---
+.left-column[
+ ## Next Steps
+]
+.right-column[
+
+- Terraform Bootcamp: [https://github.com/dcasati/terraform-bootcamp](https://github.com/dcasati/terraform-bootcamp)
+
+- Terraform Examples on Azure: [https://github.com/hashicorp/terraform/tree/master/examples](https://github.com/hashicorp/terraform/tree/master/examples)
+
+- Terraform Resources on Azure: [https://www.terraform.io/docs/providers/azurerm/index.html](https://www.terraform.io/docs/providers/azurerm/index.html)
+
+- Terraform Up and Running - Awesome book on Terraform !
+
+]
+---
+name: last-page
+template: inverse
+
+## Thank You !
+
+![QR](images/twitter-qr.png)
+
+### .white[twitter: diegocasati]
+### https://github.com/dcasati/jumpboxes/
+
+    </textarea>
+    <script src="js/remark-latest.min.js"></script>
+    <script>
+      var hljs = remark.highlighter.engine;
+    </script>
+    <script>
+      var slideshow = remark.create({
+          highlightStyle: 'agate',
+          highlightLanguage: 'remark',
+          highlightLines: true,
+          ratio: '16:9'
+        }) ;
+    </script>
+     <script src="js/asciinema-player.js"></script>
+  </body>
+</html>

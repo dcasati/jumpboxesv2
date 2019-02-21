@@ -1,0 +1,6 @@
+{"version": 2, "width": 239, "height": 69, "timestamp": 1550723981, "env": {"SHELL": "/usr/bin/zsh", "TERM": "xterm-256color"}, "title": "sudo_pair on FreeBSD 12"}
+[0.050342, "o", "\u001b[1m\u001b[7m%\u001b[27m\u001b[1m\u001b[0m                                                                                                                                                                                                                                              \r \r"]
+[0.050604, "o", "\r\u001b[0m\u001b[27m\u001b[24m\u001b[Jcore% \u001b[K"]
+[0.05078, "o", "\u001b[?1h\u001b="]
+[0.050925, "o", "\u001b[?2004h"]
+[7.79944, "o", "\u001b[?2004l\r\r\n"]
